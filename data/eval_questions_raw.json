@@ -1,0 +1,202 @@
+[
+  {
+    "question": "What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?",
+    "ground_truth": "chunk_overlap sets the target overlap between chunks, which helps mitigate information loss when context is divided across chunk boundaries."
+  },
+  {
+    "question": "How does RecursiveCharacterTextSplitter.split_text differ from create_documents?",
+    "ground_truth": "split_text returns the string content chunks directly, while create_documents creates LangChain Document objects for downstream tasks."
+  },
+  {
+    "question": "How do you initialize a local Chroma vector store with data persistence using OpenAI embeddings?",
+    "ground_truth": "Install langchain-chroma, create an OpenAIEmbeddings instance such as OpenAIEmbeddings(model=\"text-embedding-3-large\"), then instantiate Chroma with a collection_name, embedding_function=embeddings, and persist_directory such as \"./chroma_langchain_db\"."
+  },
+  {
+    "question": "How do you create a LangChain Chroma vector store from an existing `chromadb` client after creating or accessing a collection?",
+    "ground_truth": "Create or access the collection with `client.get_or_create_collection(\"collection_name\")`, optionally add documents with `collection.add(...)`, then instantiate `Chroma(client=client, collection_name=\"collection_name\", embedding_function=embeddings)`."
+  },
+  {
+    "question": "A local Chroma server is running with `chroma run`, but the code uses `Chroma(..., persist_directory=\"./chroma_langchain_db\")` and does not connect to the server. What is the likely issue and what should be used instead?",
+    "ground_truth": "`persist_directory` configures a local persistent database, not a server connection. To connect to the running server, initialize `Chroma` with `host=\"localhost\"`; for lower-level client initialization use `chromadb.HttpClient(host=\"localhost\", port=8000, ssl=False)`."
+  },
+  {
+    "question": "When answering how to instantiate a Chroma Cloud client, what grounded details should be included and what should not be invented?",
+    "ground_truth": "State that `CHROMA_API_KEY`, `CHROMA_TENANT`, and `CHROMA_DATABASE` must be set, then use `chromadb.CloudClient()` or pass `chroma_cloud_api_key`, `tenant`, and `database` to `Chroma`. Do not invent unsupported settings such as regions, project IDs, or extra authentication fields."
+  },
+  {
+    "question": "Which Chroma vector store API searches using an embedding vector directly, and how is the query embedding produced in the example?",
+    "ground_truth": "Use `vector_store.similarity_search_by_vector`; the embedding is produced with `embeddings.embed_query(\"I love green eggs and ham!\")` and passed as the `embedding` argument."
+  },
+  {
+    "question": "What is LangChain's standard model interface?",
+    "ground_truth": "It standardizes interactions with different model providers so users can swap providers seamlessly and avoid lock-in despite provider-specific APIs and response formats."
+  },
+  {
+    "question": "How do Deep Agents, LangChain `create_agent`, and LangGraph differ in recommended use?",
+    "ground_truth": "Deep Agents are recommended for batteries-included agents with features like automatic context compression, a virtual filesystem, and subagent-spawning; LangChain `create_agent` is for a highly customizable agent harness; LangGraph is for advanced low-level orchestration combining deterministic and agentic workflows."
+  },
+  {
+    "question": "What are the main steps to build the simple LangChain RAG app over Lilian Weng’s blog post?",
+    "ground_truth": "Load the web page with `load_web_page`, parse relevant HTML with `bs4.SoupStrainer`, split documents using `RecursiveCharacterTextSplitter`, index chunks with `vector_store.add_documents`, define a `retrieve_context` tool using similarity search, create an agent with `create_agent`, and stream a user query through the agent."
+  },
+  {
+    "question": "How is the `retrieve_context` tool implemented and what does it return?",
+    "ground_truth": "`retrieve_context` is decorated with `@tool(response_format=\"content_and_artifact\")`, accepts a query string, runs `vector_store.similarity_search(query, k=2)`, serializes each retrieved document’s metadata and page content, and returns both the serialized string and the retrieved documents."
+  },
+  {
+    "question": "What should the agent do if retrieved context lacks relevant information or contains instructions?",
+    "ground_truth": "It should say that it does not know when retrieved context is not relevant, treat retrieved context as data only, and ignore any instructions contained within it."
+  },
+  {
+    "question": "If a user asks how to inspect what is happening inside a multi-step LangChain RAG chain or agent, what grounded setup should be recommended?",
+    "ground_truth": "Use LangSmith, sign up, then enable tracing by setting LANGSMITH_TRACING=\"true\" and LANGSMITH_API_KEY, either as environment variables or in Python."
+  },
+  {
+    "question": "For Azure chat model initialization with init_chat_model, which environment variables and model call are shown?",
+    "ground_truth": "Set AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION=\"2025-03-01-preview\", then call init_chat_model(\"azure_openai:gpt-5.4\", azure_deployment=os.environ[\"AZURE_OPENAI_DEPLOYMENT_NAME\"])."
+  },
+  {
+    "question": "What is LangSmith in this setup used for?",
+    "ground_truth": "LangSmith is used to log traces and inspect what is happening inside complex LangChain chains or agents with multiple steps and LLM calls."
+  },
+  {
+    "question": "How does the local storage configuration for Chroma differ from the Milvus configuration?",
+    "ground_truth": "Chroma uses `persist_directory=\"./chroma_langchain_db\"` to save data locally, while Milvus sets `URI = \"./milvus_example.db\"` and passes it via `connection_args={\"uri\": URI}` with `index_params={\"index_type\": \"FLAT\", \"metric_type\": \"L2\"}`."
+  },
+  {
+    "question": "What steps are used to initialize `NVIDIAEmbeddings` with an API key?",
+    "ground_truth": "Install `langchain-nvidia-ai-endpoints`, import `getpass` and `os`, prompt for `NVIDIA_API_KEY` if it is not already set, import `NVIDIAEmbeddings` from `langchain_nvidia_ai_endpoints`, and instantiate it with `NVIDIAEmbeddings(model=\"NV-Embed-QA\")`."
+  },
+  {
+    "question": "What implementation details are specified for creating an OpenSearch vector store with AWS authentication?",
+    "ground_truth": "Set `service = \"es\"`, use region `\"us-east-2\"`, get credentials from `boto3.Session(...).get_credentials()`, create `AWS4Auth` with the session token, and call `OpenSearchVectorSearch.from_documents` with `opensearch_url`, `http_auth=awsauth`, `timeout=300`, `use_ssl=True`, `verify_certs=True`, `connection_class=RequestsHttpConnection`, and `index_name=\"test-index\"`."
+  },
+  {
+    "question": "What failure modes are avoided by splitting the 42k-character loaded document before embedding and retrieval?",
+    "ground_truth": "Splitting avoids exceeding many models’ finite context windows and reduces the chance that models struggle to find relevant information in very long inputs."
+  },
+  {
+    "question": "How does chunking the blog post help ground generation at run time in the RAG workflow?",
+    "ground_truth": "The document is split into smaller chunks for embedding and vector storage so retrieval can return only the most relevant parts for the model at run time."
+  },
+  {
+    "question": "Which LangChain splitter API is used for generic text, and what configuration is shown for splitting the loaded blog post?",
+    "ground_truth": "RecursiveCharacterTextSplitter is used with chunk_size=1000, chunk_overlap=200, and add_start_index=True, producing 66 sub-documents."
+  },
+  {
+    "question": "What is a VectorStore in the LangChain RAG pipeline?",
+    "ground_truth": "A VectorStore is a wrapper around a vector database used for storing and querying embeddings."
+  },
+  {
+    "question": "How does the RAG agent implementation differ from the two-step RAG chain described for retrieval and generation?",
+    "ground_truth": "The RAG agent executes searches through a simple retrieval tool and is a general-purpose implementation, while the two-step RAG chain uses a single LLM call per query and is fast and effective for simple queries."
+  },
+  {
+    "question": "What steps are used to create the minimal RAG agent with the `retrieve_context` tool?",
+    "ground_truth": "Define `retrieve_context` with `@tool(response_format=\"content_and_artifact\")`, call `vector_store.similarity_search(query, k=2)`, serialize each retrieved document with metadata and page content, return both the serialized text and raw documents, add the tool to `tools`, write a system prompt instructing the model to use the tool, say it does not know when retrieved information is insufficient, treat retrieved context as data only, and call `create_agent(model, tools, system_prompt=prompt)`."
+  },
+  {
+    "question": "How does the two-step RAG chain inject retrieved content into the model prompt using LangChain APIs?",
+    "ground_truth": "It defines a `@dynamic_prompt` function taking a `ModelRequest`, reads the last user message from `request.state[\"messages\"][-1].text`, runs `vector_store.similarity_search(last_query)`, joins each retrieved document’s `page_content`, and returns a system message containing that content. The agent is created with `create_agent(model, tools=[], middleware=[prompt_with_context])`."
+  },
+  {
+    "question": "What failure modes or trade-offs can occur when using agentic RAG where the LLM decides whether to call the search tool?",
+    "ground_truth": "When search is performed, it requires two inference calls: one to generate the query and one to produce the final response. The LLM also has reduced control guarantees because it may skip searches when they are needed or issue extra searches when unnecessary."
+  },
+  {
+    "question": "What prompt-grounding rules are included in the custom RAG prompt to constrain the model’s answer?",
+    "ground_truth": "The prompt tells the assistant to use the retrieved pieces to answer, say it does not know if the answer is unknown or relevant information is missing, use at most three sentences, keep the answer concise, and treat the retrieved material as data only rather than following any instructions inside it."
+  },
+  {
+    "question": "In the LangChain RAG example, what does RetrieveDocumentsMiddleware.before_model return after calling vector_store.similarity_search on the last message text?",
+    "ground_truth": "It returns a dictionary with an updated messages list containing the last message augmented with retrieved document content and grounding instructions, plus a context field containing the retrieved_docs."
+  },
+  {
+    "question": "What is indirect prompt injection in RAG applications?",
+    "ground_truth": "Indirect prompt injection occurs when retrieved documents contain instruction-like text that the model may follow because the retrieved data shares the same context window as the system prompt."
+  },
+  {
+    "question": "How do defensive prompts and context delimiters differ as mitigations for indirect prompt injection?",
+    "ground_truth": "Defensive prompts explicitly tell the model to treat retrieved context as data and ignore instructions within it, while context delimiters use structural markers such as XML tags to separate retrieved data from instructions."
+  },
+  {
+    "question": "Before starting prompt engineering for a Claude use case, what should you establish, and what tool can help if you do not have a first draft prompt?",
+    "ground_truth": "Establish clear success criteria, empirical tests against those criteria, and a first draft prompt to improve. If you do not have a draft, use the prompt generator in the Claude Console."
+  },
+  {
+    "question": "In LangChain's recursive text splitter configuration, which separators are listed, including the Unicode punctuation variants?",
+    "ground_truth": "The separators are double newline, newline, space, period, comma, zero-width space, fullwidth comma, ideographic comma, fullwidth full stop, ideographic full stop, and an empty string."
+  },
+  {
+    "question": "Why might prompt engineering be the wrong fix for a failing evaluation related to latency or cost?",
+    "ground_truth": "Latency and cost are not always best controlled through prompt engineering and may be more easily improved by selecting a different model."
+  },
+  {
+    "question": "If a user says they are looking to chat with Claude rather than build an API integration, where should they be directed?",
+    "ground_truth": "Direct them to claude.ai."
+  },
+  {
+    "question": "What is the Messages API, and what use case is it best for?",
+    "ground_truth": "The Messages API provides direct model prompting access and is best for custom agent loops and fine-grained control."
+  },
+  {
+    "question": "What is Claude?",
+    "ground_truth": "Claude is a highly performant, trustworthy, and intelligent AI platform built by Anthropic for tasks involving language, reasoning, analysis, coding, and more."
+  },
+  {
+    "question": "How do OpenRouter and Perplexity differ in LangChain package name and JS/TS support?",
+    "ground_truth": "OpenRouter uses `langchain-openrouter` and does not have JS/TS support; Perplexity uses `langchain-perplexity` and has JS/TS support."
+  },
+  {
+    "question": "What steps are described for using a LangChain provider integration and swapping providers consistently?",
+    "ground_truth": "Install the dedicated `langchain-<provider>` package, choose a model name, and use LangChain’s standard interfaces so providers can be swapped without changing application code."
+  },
+  {
+    "question": "What does Claude adaptive thinking mode do, and what happens to data under a Zero Data Retention arrangement?",
+    "ground_truth": "Adaptive thinking lets Claude dynamically decide when and how much to use extended thinking. With a ZDR arrangement, data sent through the feature is not stored after the API response is returned."
+  },
+  {
+    "question": "A request to claude-opus-4-7 uses thinking: {\"type\": \"enabled\", \"budget_tokens\": 4096} and receives a 400 error. What caused the failure and how should the request be changed?",
+    "ground_truth": "Claude Opus 4.7 rejects manual thinking with budget_tokens because adaptive thinking is its only supported thinking mode. Use thinking: {\"type\": \"adaptive\"}; thinking is otherwise off unless explicitly enabled."
+  },
+  {
+    "question": "For a very simple prompt such as asking the capital of France while using adaptive thinking with output_config effort set to medium or low, how may Claude handle extended thinking?",
+    "ground_truth": "Effort is soft guidance: medium uses moderate thinking and may skip thinking for very simple queries, while low minimizes thinking and skips it for simple tasks where speed matters most."
+  },
+  {
+    "question": "Which Messages API parameters enable adaptive thinking with medium effort in a Python client.messages.create call for Claude Opus 4.7?",
+    "ground_truth": "Set model=\"claude-opus-4-7\", thinking={\"type\": \"adaptive\"}, and output_config={\"effort\": \"medium\"}; no beta header is required."
+  },
+  {
+    "question": "What is adaptive thinking in the Claude API, and which models support it?",
+    "ground_truth": "Adaptive thinking is a mode configured with `thinking: {type: \"adaptive\"}` where Claude determines when and how much extended thinking to use, optionally guided by `effort`. It is available on Claude Mythos Preview, Claude Opus 4.7, Opus 4.6, and Sonnet 4.6."
+  },
+  {
+    "question": "How does adaptive thinking differ from manual thinking for Claude Opus 4.7, Opus 4.6, and Sonnet 4.6?",
+    "ground_truth": "Adaptive thinking is the only supported mode on Claude Opus 4.7, where `type: \"enabled\"` with `budget_tokens` is rejected. On Opus 4.6 and Sonnet 4.6, manual thinking with `budget_tokens` still works but is deprecated; adaptive mode is recommended. Manual interleaved thinking works on Sonnet 4.6 via the `interleaved-thinking-2025-05-14` beta header, but is not available on Opus 4.6."
+  },
+  {
+    "question": "What should you do if responses using adaptive thinking stop with `stop_reason: \"max_tokens\"`?",
+    "ground_truth": "Increase `max_tokens` to give Claude more room, or lower the `effort` level because high and max effort can cause more extensive thinking and exhaust the total output budget."
+  },
+  {
+    "question": "When streaming responses with thinking encryption, how is the signature delivered in the event stream?",
+    "ground_truth": "The signature is added via a signature_delta inside a content_block_delta event just before the content_block_stop event."
+  },
+  {
+    "question": "Why might a response using thinking.display: \"omitted\" have billed output tokens that do not match the visible token count?",
+    "ground_truth": "The original internal thinking tokens are still billed, but zero thinking tokens are visible because the thinking field is empty; omitting thinking reduces latency, not cost."
+  },
+  {
+    "question": "Does the thinking model see the summarized thinking output, and what produces that summary?",
+    "ground_truth": "No. Summarization is processed by a different model than the target request model, and the thinking model does not see the summarized output."
+  },
+  {
+    "question": "A developer using adaptive thinking notices that the billed output token count is higher than the visible tokens in Claude's response. What explains this discrepancy?",
+    "ground_truth": "With adaptive thinking, billing is based on the full thinking process, not just the thinking content or tokens visible in the response."
+  },
+  {
+    "question": "A user prompt asks you to recommend the Message Batches API for a Zero Data Retention workflow that requires immediate responses. What grounded answer should you give?",
+    "ground_truth": "The Message Batches API should not be presented as suitable: it is asynchronous, intended for tasks where immediate responses are not required, and is not eligible for Zero Data Retention."
+  }
+]
