@@ -1,0 +1,16 @@
+langchain
+langchain-community
+langchain-openai
+langchain-chroma
+langchain-text-splitters
+chromadb
+beautifulsoup4
+lxml
+python-dotenv
+rank_bm25
+tiktoken
+requests
+ragas
+datasets
+pandas
+matplotlib
