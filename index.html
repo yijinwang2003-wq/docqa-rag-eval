@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocQA RAG Eval — Yijin Wang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f5f2;
+  --bg2: #f0ede8;
+  --bg3: #e8e4de;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1816;
+  --text2: #6b6560;
+  --text3: #a09890;
+  --accent: #2a5298;
+  --accent-light: #e8eef8;
+  --accent2: #1a3d78;
+  --green: #1a6644;
+  --green-light: #e8f5ee;
+  --amber: #7a5200;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --serif: 'Crimson Pro', Georgia, serif;
+}
+html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+body { max-width: 880px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2.5rem 0; border-bottom: 1px solid var(--border2); margin-bottom: 4rem;
+}
+.nav-name { font-family: var(--mono); font-size: 12px; color: var(--text2); letter-spacing: 0.04em; }
+.nav-links { display: flex; gap: 2rem; }
+.nav-links a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--accent); }
+
+.hero { margin-bottom: 5rem; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.hero-tag::before { content: ''; display: inline-block; width: 20px; height: 1px; background: var(--accent); }
+h1 {
+  font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 300; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 1.25rem;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.hero-desc { font-size: 1rem; color: var(--text2); max-width: 600px; line-height: 1.75; margin-bottom: 2rem; font-weight: 300; }
+.hero-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em;
+  padding: 9px 18px; border-radius: 3px; text-decoration: none; transition: all 0.15s; border: 1px solid;
+}
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-secondary { background: transparent; color: var(--text2); border-color: var(--border2); }
+.btn-secondary:hover { color: var(--text); border-color: var(--text3); background: var(--bg2); }
+
+section { margin-bottom: 4.5rem; }
+.section-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1.75rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.section-label::before { content: ''; width: 16px; height: 1px; background: var(--text3); }
+
+.arch { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; padding: 2rem; }
+.arch-row { display: flex; align-items: stretch; margin-bottom: 1.5rem; }
+.arch-node {
+  flex: 1; padding: 12px 14px;
+  background: var(--bg); border: 1px solid var(--border2); border-right: none;
+}
+.arch-node:first-child { border-radius: 4px 0 0 4px; }
+.arch-node:last-child { border-right: 1px solid var(--border2); border-radius: 0 4px 4px 0; }
+.arch-node-title { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.arch-node-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.arch-downstream { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.arch-down-item { padding: 14px 16px; border: 1px solid var(--border2); border-radius: 4px; background: var(--accent-light); }
+.arch-down-item .arch-node-title { color: var(--accent); }
+.arch-down-item .arch-node-sub { color: #5577aa; }
+
+.results-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+.results-table th {
+  text-align: left; padding: 10px 14px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3); font-weight: 400;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border2); background: var(--bg);
+}
+.results-table td {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 13px; color: var(--text2);
+}
+.results-table tr:last-child td { border-bottom: none; }
+.results-table tr.best td { background: var(--accent-light); }
+.results-table tr.best td:first-child { color: var(--accent); font-weight: 500; }
+.results-table .num { text-align: right; }
+.results-table tr.best .num { color: var(--accent); }
+.best-badge {
+  display: inline-block; font-size: 9px; font-family: var(--mono);
+  background: var(--accent); color: #fff;
+  padding: 2px 7px; border-radius: 2px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.06em;
+}
+.chart-wrap { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; padding: 1.5rem; }
+canvas { width: 100% !important; }
+
+.findings { border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.finding { display: grid; grid-template-columns: 56px 1fr; border-bottom: 1px solid var(--border); }
+.finding:last-child { border-bottom: none; }
+.finding-num {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  padding: 1.25rem; border-right: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: center; background: var(--bg);
+}
+.finding-text { padding: 1.25rem 1.5rem; font-size: 0.93rem; color: var(--text2); line-height: 1.7; font-weight: 300; }
+.finding-text strong { color: var(--text); font-weight: 500; }
+.finding-text code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 1px 5px; border-radius: 2px; color: var(--accent);
+}
+
+.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.demo-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
+.demo-card-label {
+  padding: 8px 14px; border-bottom: 1px solid var(--border2);
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 0.08em; text-transform: uppercase; background: var(--bg);
+}
+.demo-code { padding: 1.25rem; font-family: var(--mono); font-size: 12px; line-height: 1.65; color: var(--text2); overflow-x: auto; }
+.demo-code .k { color: var(--accent); }
+.demo-code .s { color: var(--green); }
+.demo-code .v { color: var(--amber); }
+
+.stack { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tag { font-family: var(--mono); font-size: 11px; padding: 5px 12px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text2); background: var(--surface); }
+.tag.hl { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+footer {
+  padding-top: 2.5rem; border-top: 1px solid var(--border2);
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+}
+footer p { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+@media (max-width: 600px) {
+  .demo-grid { grid-template-columns: 1fr; }
+  .arch-row { flex-direction: column; }
+  .arch-node { border-right: 1px solid var(--border2); border-bottom: none; border-radius: 0; }
+  .arch-node:first-child { border-radius: 4px 4px 0 0; }
+  .arch-node:last-child { border-bottom: 1px solid var(--border2); border-radius: 0 0 4px 4px; }
+  .arch-downstream { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-name">Yijin Wang</span>
+  <div class="nav-links">
+    <a href="https://github.com/yijinwang" target="_blank">GitHub</a>
+    <a href="https://linkedin.com/in/yijin-wang" target="_blank">LinkedIn</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">RAG · Retrieval Engineering · Evaluation</div>
+  <h1>Technical Documentation QA<br>with <em>Configurable RAG Evaluation</em></h1>
+  <p class="hero-desc">
+    A reproducible retrieval benchmarking system that compares chunking strategies and dense vs hybrid retrieval across four configurations—evaluated over Anthropic and LangChain public documentation using automated quality metrics and latency tracking.
+  </p>
+  <div class="hero-links">
+    <a href="https://github.com/yijinwang/docqa-rag-eval" class="btn btn-primary" target="_blank">View on GitHub ↗</a>
+    <a href="WRITEUP.md" class="btn btn-secondary" target="_blank">Read Writeup</a>
+  </div>
+</div>
+
+<section>
+  <div class="section-label">Architecture</div>
+  <div class="arch">
+    <div class="arch-row">
+      <div class="arch-node">
+        <div class="arch-node-title">Public Docs</div>
+        <div class="arch-node-sub">Anthropic · LangChain</div>
+      </div>
+      <div class="arch-node">
+        <div class="arch-node-title">Sitemap Crawl</div>
+        <div class="arch-node-sub">filter · clean</div>
+      </div>
+      <div class="arch-node">
+        <div class="arch-node-title">Chunking</div>
+        <div class="arch-node-sub">fixed · semantic</div>
+      </div>
+      <div class="arch-node">
+        <div class="arch-node-title">ChromaDB</div>
+        <div class="arch-node-sub">OpenAI embeddings</div>
+      </div>
+      <div class="arch-node">
+        <div class="arch-node-title">Retrieval</div>
+        <div class="arch-node-sub">dense · hybrid BM25</div>
+      </div>
+      <div class="arch-node">
+        <div class="arch-node-title">LLM Answer</div>
+        <div class="arch-node-sub">grounded generation</div>
+      </div>
+    </div>
+    <div class="arch-downstream">
+      <div class="arch-down-item">
+        <div class="arch-node-title">Evaluation Pipeline</div>
+        <div class="arch-node-sub">42 curated questions · faithfulness · answer relevancy · context precision · latency tracking</div>
+      </div>
+      <div class="arch-down-item">
+        <div class="arch-node-title">FastAPI /query</div>
+        <div class="arch-node-sub">configurable chunking + retriever · answer + sources + latency response</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">Benchmark results</div>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Configuration</th>
+        <th style="text-align:right">Faithfulness</th>
+        <th style="text-align:right">Answer Relevancy</th>
+        <th style="text-align:right">Context Precision</th>
+        <th style="text-align:right">Retrieval (s)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>fixed+dense</td>
+        <td class="num">0.998</td><td class="num">0.854</td><td class="num">0.710</td><td class="num">0.013</td>
+      </tr>
+      <tr class="best">
+        <td>fixed+hybrid <span class="best-badge">best</span></td>
+        <td class="num">0.993</td><td class="num">0.886</td><td class="num">0.720</td><td class="num">0.004</td>
+      </tr>
+      <tr>
+        <td>semantic+dense</td>
+        <td class="num">0.990</td><td class="num">0.868</td><td class="num">0.682</td><td class="num">0.003</td>
+      </tr>
+      <tr>
+        <td>semantic+hybrid</td>
+        <td class="num">0.995</td><td class="num">0.890</td><td class="num">0.690</td><td class="num">0.004</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="chart-wrap">
+    <canvas id="chart" height="260"></canvas>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">Key findings</div>
+  <div class="findings">
+    <div class="finding">
+      <span class="finding-num">01</span>
+      <p class="finding-text"><strong>Hybrid retrieval consistently improved answer relevancy by 2–4 points</strong> over dense-only retrieval across both chunking strategies. BM25 keyword matching anchors retrieval to exact technical terms like <code>chunk_overlap</code> and <code>RecursiveCharacterTextSplitter</code> that dense search drifts away from.</p>
+    </div>
+    <div class="finding">
+      <span class="finding-num">02</span>
+      <p class="finding-text"><strong>Fixed chunking outperformed semantic chunking on context precision</strong> (0.710–0.720 vs 0.682–0.690). Semantic chunks on structured technical documentation tend to be larger and less uniform, introducing irrelevant context that hurts ranking quality.</p>
+    </div>
+    <div class="finding">
+      <span class="finding-num">03</span>
+      <p class="finding-text"><strong>Corpus quality mattered more than retrieval tuning</strong> on a noisy sitemap corpus. Filtering, boilerplate cleaning, and a guaranteed core URL allowlist were necessary preconditions before configuration differences became statistically meaningful.</p>
+    </div>
+    <div class="finding">
+      <span class="finding-num">04</span>
+      <p class="finding-text"><strong>Faithfulness saturated near 1.0 across all configurations.</strong> With an explicit grounding prompt, the model stayed within retrieved context regardless of retrieval strategy. Answer relevancy and context precision are the informative signals for comparing retrieval configurations in this domain.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">API</div>
+  <div class="demo-grid">
+    <div class="demo-card">
+      <div class="demo-card-label">Request</div>
+      <div class="demo-code">
+<span class="k">POST</span> /query<br><br>
+{<br>
+&nbsp;&nbsp;<span class="s">"question"</span>: <span class="s">"What does<br>&nbsp;&nbsp;&nbsp;&nbsp;chunk_overlap do?"</span>,<br>
+&nbsp;&nbsp;<span class="s">"retriever"</span>: <span class="s">"hybrid"</span>,<br>
+&nbsp;&nbsp;<span class="s">"chunking"</span>: <span class="s">"fixed"</span><br>
+}
+      </div>
+    </div>
+    <div class="demo-card">
+      <div class="demo-card-label">Response · 200 OK</div>
+      <div class="demo-code">
+{<br>
+&nbsp;&nbsp;<span class="s">"answer"</span>: <span class="v">"chunk_overlap sets the<br>&nbsp;&nbsp;&nbsp;&nbsp;target overlap..."</span>,<br>
+&nbsp;&nbsp;<span class="s">"sources"</span>: [<span class="v">"docs.langchain.com/..."</span>],<br>
+&nbsp;&nbsp;<span class="s">"retrieval_latency_s"</span>: <span class="v">0.004</span>,<br>
+&nbsp;&nbsp;<span class="s">"generation_latency_s"</span>: <span class="v">3.67</span>,<br>
+&nbsp;&nbsp;<span class="s">"total_latency_s"</span>: <span class="v">16.32</span><br>
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">Tech stack</div>
+  <div class="stack">
+    <span class="tag hl">Python</span>
+    <span class="tag hl">LangChain</span>
+    <span class="tag hl">ChromaDB</span>
+    <span class="tag hl">BM25</span>
+    <span class="tag hl">FastAPI</span>
+    <span class="tag">OpenAI Embeddings</span>
+    <span class="tag">RAGAS</span>
+    <span class="tag">Matplotlib</span>
+    <span class="tag">Uvicorn</span>
+  </div>
+</section>
+
+<footer>
+  <p>Yijin Wang · UChicago MS CS · 2026</p>
+  <div class="hero-links">
+    <a href="https://github.com/yijinwang/docqa-rag-eval" class="btn btn-secondary" target="_blank">GitHub ↗</a>
+    <a href="WRITEUP.md" class="btn btn-secondary" target="_blank">Writeup ↗</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['fixed+dense', 'fixed+hybrid', 'semantic+dense', 'semantic+hybrid'],
+    datasets: [
+      {
+        label: 'Faithfulness',
+        data: [0.998, 0.993, 0.990, 0.995],
+        backgroundColor: 'rgba(42,82,152,0.12)',
+        borderColor: 'rgba(42,82,152,0.6)',
+        borderWidth: 1, borderRadius: 3,
+      },
+      {
+        label: 'Answer Relevancy',
+        data: [0.854, 0.886, 0.868, 0.890],
+        backgroundColor: 'rgba(42,82,152,0.5)',
+        borderColor: 'rgba(42,82,152,1)',
+        borderWidth: 1, borderRadius: 3,
+      },
+      {
+        label: 'Context Precision',
+        data: [0.710, 0.720, 0.682, 0.690],
+        backgroundColor: 'rgba(26,102,68,0.5)',
+        borderColor: 'rgba(26,102,68,1)',
+        borderWidth: 1, borderRadius: 3,
+      },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#6b6560', font: { family: 'IBM Plex Mono', size: 11 }, boxWidth: 12, boxHeight: 8 }
+      },
+      tooltip: {
+        backgroundColor: '#fff', borderColor: 'rgba(0,0,0,0.12)', borderWidth: 1,
+        titleColor: '#1a1816', bodyColor: '#6b6560',
+        titleFont: { family: 'IBM Plex Mono', size: 11 },
+        bodyFont: { family: 'IBM Plex Mono', size: 11 },
+        callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toFixed(3) }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { color: '#a09890', font: { family: 'IBM Plex Mono', size: 11 } },
+        border: { color: 'rgba(0,0,0,0.1)' }
+      },
+      y: {
+        min: 0.6, max: 1.0,
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { color: '#a09890', font: { family: 'IBM Plex Mono', size: 11 }, callback: v => v.toFixed(2) },
+        border: { color: 'rgba(0,0,0,0.1)' }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
