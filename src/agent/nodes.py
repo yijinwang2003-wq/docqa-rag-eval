@@ -6,6 +6,8 @@ import re
 from time import perf_counter
 from typing import Any
 
+from langchain_core.documents import Document
+
 from src.agent.state import AgentState, add_trajectory_step
 from src.agent.tools import (
     document_sources,
@@ -158,6 +160,106 @@ def score_confidence(state: AgentState) -> AgentState:
             },
         ),
     }
+
+
+def web_search_fallback(state: AgentState) -> AgentState:
+    """Try web search when local RAG confidence is low."""
+
+    query = state.get("effective_question") or state["question"]
+    question = state["question"].strip()
+    existing_answer = state.get("answer", "")
+    start = perf_counter()
+
+    try:
+        from langchain_community.tools.tavily_search import TavilySearchResults
+
+        search = TavilySearchResults(max_results=3)
+        raw_results = search.invoke(query)
+        web_docs = _tavily_results_to_documents(raw_results)
+        if not web_docs:
+            return {
+                "web_search_used": True,
+                "web_search_results": [],
+                "trajectory": add_trajectory_step(
+                    state,
+                    step="web_search_fallback",
+                    input_text=query,
+                    output_text="no web search results",
+                    metadata={
+                        "success": False,
+                        "reason": "no_results",
+                        "latency_s": perf_counter() - start,
+                    },
+                ),
+            }
+
+        answer = generate_answer(question, web_docs)
+        snippets = [document.page_content for document in web_docs]
+        return {
+            "answer": answer,
+            "documents": web_docs,
+            "sources": document_sources(web_docs),
+            "web_search_used": True,
+            "web_search_results": snippets,
+            "trajectory": add_trajectory_step(
+                state,
+                step="web_search_fallback",
+                input_text=query,
+                output_text=f"retrieved {len(web_docs)} web result(s)",
+                metadata={
+                    "success": True,
+                    "latency_s": perf_counter() - start,
+                },
+            ),
+        }
+    except Exception as exc:
+        return {
+            "answer": existing_answer,
+            "web_search_used": True,
+            "web_search_results": [],
+            "trajectory": add_trajectory_step(
+                state,
+                step="web_search_fallback",
+                input_text=query,
+                output_text="web search failed",
+                metadata={
+                    "success": False,
+                    "reason": type(exc).__name__,
+                    "error": str(exc),
+                    "latency_s": perf_counter() - start,
+                },
+            ),
+        }
+
+
+def _tavily_results_to_documents(raw_results: Any) -> list[Document]:
+    documents = []
+    if not isinstance(raw_results, list):
+        return documents
+
+    for result in raw_results:
+        if not isinstance(result, dict):
+            continue
+        snippet = str(
+            result.get("content")
+            or result.get("snippet")
+            or result.get("answer")
+            or ""
+        ).strip()
+        if not snippet:
+            continue
+        documents.append(
+            Document(
+                page_content=snippet,
+                metadata={
+                    "source": "web_search",
+                    "url": result.get("url", ""),
+                    "title": result.get("title", ""),
+                },
+            )
+        )
+
+    return documents
 
 
 def _confidence_score(answer: str, documents: list[Any]) -> tuple[float, str]:

@@ -31,6 +31,8 @@ class AgentState(TypedDict, total=False):
     confidence: float
     fallback: bool
     fallback_reason: str
+    web_search_used: bool
+    web_search_results: list[str]
     trajectory: list[TrajectoryStep]
 
 

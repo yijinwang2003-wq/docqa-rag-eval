@@ -10,8 +10,17 @@ from src.agent.nodes import (
     maybe_rewrite_query,
     retrieve_context,
     score_confidence,
+    web_search_fallback,
 )
 from src.agent.state import AgentState
+
+
+def route_after_confidence(state: AgentState) -> str:
+    """Route low-confidence answers to one web-search fallback attempt."""
+
+    if state.get("fallback") and not state.get("web_search_used", False):
+        return "web_search_fallback"
+    return END
 
 
 def build_agent_graph():
@@ -23,13 +32,15 @@ def build_agent_graph():
     graph.add_node("retrieve_context", retrieve_context)
     graph.add_node("generate_response", generate_response)
     graph.add_node("score_confidence", score_confidence)
+    graph.add_node("web_search_fallback", web_search_fallback)
 
     graph.add_edge(START, "analyze_query")
     graph.add_edge("analyze_query", "rewrite_query")
     graph.add_edge("rewrite_query", "retrieve_context")
     graph.add_edge("retrieve_context", "generate_response")
     graph.add_edge("generate_response", "score_confidence")
-    graph.add_edge("score_confidence", END)
+    graph.add_conditional_edges("score_confidence", route_after_confidence)
+    graph.add_edge("web_search_fallback", END)
 
     return graph.compile()
 
@@ -42,6 +53,8 @@ def run_agent(question: str, retriever_name: str = "dense") -> AgentState:
         {
             "question": question,
             "retriever_name": retriever_name,
+            "web_search_used": False,
+            "web_search_results": [],
             "trajectory": [],
         }
     )
