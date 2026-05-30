@@ -8,7 +8,7 @@ Target: 42 questions across 4 categories
 
 ---
 
-## Category 1: RAG Concepts — Chunking, Retrieval, Embedding (15)
+## Category 1: RAG Concepts — Chunking, Retrieval, Embedding (17)
 
 ### 1. What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?
 

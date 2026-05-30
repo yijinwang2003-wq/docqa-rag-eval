@@ -15,9 +15,15 @@ import time
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
 
 from src.chunking import FIXED_CHUNKING, SEMANTIC_CHUNKING
-from src.config import PROJECT_ROOT, RETRIEVER_K
+from src.config import (
+    OPENAI_EVAL_MODEL,
+    PROJECT_ROOT,
+    RETRIEVER_K,
+    require_openai_api_key,
+)
 from src.rag_chain import HybridRetriever, PROMPT, format_docs, get_llm, unique_sources
 from src.vectorstore import get_persisted_documents, get_vectorstore
 
@@ -472,6 +478,7 @@ def _answer_cache_key(
 
 def _judge_cache_key(run: RagRun, metric: str, prompt: str) -> str:
     return _hash_parts(
+        OPENAI_EVAL_MODEL,
         run.configuration,
         run.question,
         run.ground_truth,
@@ -590,7 +597,7 @@ def _evaluate_runs_with_llm_fallback(
     judge_cache: dict | None = None,
 ):
     judge_cache = judge_cache if judge_cache is not None else _load_json_cache(JUDGE_CACHE_PATH)
-    llm = get_llm()
+    llm = get_eval_llm()
     rows = []
 
     for run in runs:
@@ -601,6 +608,13 @@ def _evaluate_runs_with_llm_fallback(
         rows.append(row)
 
     return pd.DataFrame(rows)
+
+
+def get_eval_llm() -> ChatOpenAI:
+    """Create the lower-cost model used for LLM fallback judging."""
+
+    require_openai_api_key()
+    return ChatOpenAI(model=OPENAI_EVAL_MODEL)
 
 
 def _score_run_with_llm(

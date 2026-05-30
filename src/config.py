@@ -29,6 +29,7 @@ def _path_from_env(name: str, default: str) -> Path:
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.5")
+OPENAI_EVAL_MODEL = os.getenv("OPENAI_EVAL_MODEL", "gpt-5-mini")
 OPENAI_EMBEDDING_MODEL = os.getenv(
     "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
 )

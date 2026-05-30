@@ -49,7 +49,7 @@ The result was a smaller but higher-quality corpus. Retrieval failure on concept
 The experiment compares two variables:
 
 - **Chunking strategy**: `fixed` (RecursiveCharacterTextSplitter) vs `semantic` (SemanticChunker with sentence-similarity fallback)
-- **Retrieval strategy**: `dense` (Chroma cosine similarity) vs `hybrid` (Chroma + BM25 with reciprocal rank fusion)
+- **Retrieval strategy**: `dense` (Chroma cosine similarity) vs `hybrid` (dense retrieval augmented with BM25 retrieval, followed by result merging and deduplication)
 
 This gives four configurations: `fixed+dense`, `fixed+hybrid`, `semantic+dense`, `semantic+hybrid`.
 
@@ -71,11 +71,29 @@ The same reviewed question set is used for all four configurations, so the compa
 
 ---
 
+## Evaluation Dataset
+
+The final benchmark contains 42 reviewed questions covering:
+
+- RAG concepts
+- Chunking
+- Retrieval
+- Embeddings
+- Vector stores
+- Anthropic API usage
+
+Questions were initially generated automatically and then filtered, deduplicated,
+and reviewed before inclusion in the benchmark. The static classification in
+`outputs/eval_question_classification.md` further labels the 42 questions by
+predicted rewrite behavior, question type, and likely agent benefit.
+
+---
+
 ## Evaluation Infrastructure
 
-RAGAS is the preferred evaluator in the code path. In practice, RAGAS had dependency compatibility issues in the local environment (conflicts between `ragas`, `datasets`, and the installed LangChain version). All 42 reported results use an LLM fallback evaluator that implements the same three metrics—faithfulness, answer relevancy, context precision—using direct LLM scoring rather than the RAGAS framework.
+RAGAS is the preferred evaluator in the code path. When RAGAS is unavailable, the project falls back to an LLM judge that implements the same three metrics: faithfulness, answer relevancy, and context precision. The current saved outputs do not record evaluator-backend metadata, so future runs should persist whether each score came from RAGAS or fallback judging.
 
-The fallback evaluator produces scores on the same 0–1 scale. The scores are not directly comparable to RAGAS-scored results from other projects, but they are internally consistent: the four configurations are evaluated with the same evaluator under identical conditions, so relative differences are valid.
+The fallback evaluator produces scores on the same 0–1 scale. These scores should not be treated as directly comparable to RAGAS-scored results from other projects, but they can still support controlled within-run comparisons when the same evaluator is used across all configurations.
 
 Evaluation runs are checkpointed incrementally to `outputs/eval_results_partial.csv`. Completed rows are not re-evaluated on resume. This was necessary because a full 4-configuration × 42-question run makes ~168 LLM calls for generation plus ~504 calls for evaluation (3 metrics × 168), and failures mid-run should not require restarting from zero.
 
@@ -98,7 +116,7 @@ Evaluation runs are checkpointed incrementally to `outputs/eval_results_partial.
 
 The likely explanation: semantic chunking on technical documentation produces larger, less uniform chunks. A semantic chunk that covers a broad concept like "how vector search works" contains more text, but not all of it is relevant to a specific query about `k` selection or distance metrics. Fixed chunking at a consistent character count produces smaller, more precise units. For a corpus of structured technical documentation, fixed chunking is the better baseline.
 
-**`fixed+hybrid` is the best overall configuration.** Highest context precision (0.720), second-highest answer relevancy (0.886, within 0.4 points of `semantic+hybrid`), and faster retrieval latency than `fixed+dense`.
+**`fixed+hybrid` is the strongest balanced configuration if prioritizing context precision and stable retrieval behavior.** It achieved the highest context precision (0.720) while remaining within 0.004 answer-relevancy points of `semantic+hybrid`, the top relevancy configuration.
 
 **Retrieval latency is sub-10ms for all configurations.** At this scale the difference between 0.003s and 0.013s is not operationally significant. The latency numbers matter more as corpus size grows, where BM25 index construction and Chroma query time diverge.
 
@@ -112,7 +130,65 @@ The likely explanation: semantic chunking on technical documentation produces la
 
 **No streaming.** The FastAPI endpoint returns synchronously. Total latency of ~16s on a cold request is dominated by LLM generation time. Streaming would improve perceived latency but not actual generation time.
 
-**No frontend.** The system is intentionally CLI and API-first. A Streamlit or React frontend would make it more demonstrable but would not add to the retrieval engineering analysis.
+**No interactive RAG frontend.** The system is intentionally CLI and API-first. The repository may include static portfolio assets, but it does not include an interactive RAG frontend such as Streamlit, Gradio, or a React chat UI.
+
+---
+
+## Agentic RAG Evaluation
+
+The later phase of the project adds a minimal agentic RAG workflow on top of the same retrieval and generation components. The purpose is not to claim that a more complex agent is automatically better. The purpose is to measure whether specific agent behaviors—query analysis, query rewriting, trajectory logging, and confidence scoring—change answer quality or operational cost.
+
+### Why a Minimal Agent
+
+Phase 1 uses a single LangGraph workflow, the existing retriever, and the existing grounded generation chain. This keeps the comparison controlled: the baseline and agent share the same corpus, vector store, retriever implementation, prompt, and evaluator. Any measured differences are therefore easier to attribute to the agent wrapper rather than to a new retrieval backend or a new tool stack.
+
+The project intentionally does not add multi-agent orchestration, supervisor-worker routing, external web search, code execution, or MCP tool integrations in this phase. Those features would make the system more capable, but they would also introduce new failure modes and confound the evaluation. A small graph is enough to test the first agentic question: does query analysis and optional rewriting improve retrieval and answer quality enough to justify the additional steps?
+
+### Findings
+
+The 10-question pilot did not trigger query rewriting, so it mostly tested the LangGraph wrapper and trajectory instrumentation. Faithfulness remained unchanged at 1.000 for both baseline and agent, and retrieval success was also unchanged. This run did not provide evidence that the agent improved retrieval reliability.
+
+The targeted 7-question rewrite subset produced a more informative result. Q17 is the clearest positive rewrite case in the subset. The original question was symptom-first: "My RAG answers keep cutting off mid-explanation. Could this be a chunking problem?" The rewrite shifted retrieval toward a more technical troubleshooting query, which produced a higher judged answer relevancy score: 0.350 for baseline versus 0.600 for the agent, a 71% relative gain, while faithfulness remained 1.000 for both. This should not be interpreted as proving that chunking was not involved; rather, it shows that query rewriting changed the retrieval direction and produced a more relevant judged answer in this case.
+
+The same subset also shows that rewriting is not universally helpful. Question 41 was already a well-specified question about adversarial instructions in retrieved documents. Both systems answered with the same substantive mitigations, but the baseline relevancy score was 1.000 and the agent score was 0.900. I would not treat that 0.1 difference as strong evidence of degradation because LLM judge scores are noisy, but it is evidence that rewriting can be unnecessary when the original query is already precise.
+
+Agent orchestration introduced measurable workflow overhead. In the rewrite subset, the agent used a mean of 5.0 tool steps versus 2.0 for the baseline, and mean latency increased from 6.037s to 7.098s. The observed 5.0 mean mainly reflects the fixed Phase 1 graph design: query analysis, optional rewrite, retrieval, generation, and confidence scoring. Confidence scoring currently runs on every query and records fallback metadata when confidence is low; it does not trigger a second retrieval or generation pass.
+
+Fallback behavior in Phase 1 means flagging low-confidence outputs and recording a fallback reason for evaluation. It does not yet execute an alternate retrieval strategy, rerun generation, or call external tools.
+
+### Interpretation
+
+The agentic evaluation reinforces the main evaluation philosophy of the project: final-answer quality is not enough. Agent behavior needs to be measured independently because the intermediate path can add latency, unnecessary rewrites, or extra confidence steps without improving the final answer.
+
+Rewrite usefulness is highly query-dependent. It adds value when the user query is underspecified, symptom-first, or does not map cleanly to documentation structure. It is less useful when the query already contains the right technical concepts. More orchestration is therefore not automatically better; it needs to be justified by measurable gains on the query types where it is expected to help.
+
+### Limitations
+
+The agentic evaluation is small. The 10-question pilot did not exercise rewriting, and the 7-question rewrite subset was selected specifically because those questions were predicted to trigger the rewrite heuristic. That selection is useful for stress-testing rewrite behavior, but it is not representative of the full 42-question benchmark.
+
+The evaluator is also an LLM judge, so small score differences should be interpreted cautiously. The Q41 result is best treated as inconclusive rather than as proof that rewriting harms good queries. The more defensible conclusion is narrower: the current rewrite heuristic can fire on already precise queries and should be made more selective.
+
+Confidence and fallback calibration is another open issue. Future experiments should test whether confidence scoring should be conditionally invoked, and whether fallback thresholds correlate with retrieval-success signals, retrieved-document counts, answer relevancy, faithfulness, and latency.
+
+---
+
+## Cost Considerations
+
+The full retrieval benchmark evaluates 4 configurations across 42 questions, producing 168 generated answers. With three answer-quality metrics per generated answer, a full run can require roughly 504 evaluation judgments in addition to generation calls. This is why the project separates generation and evaluation models, supports resumable partial CSV outputs, and uses cache-aware evaluation logic. The design allows failed or interrupted runs to resume without discarding completed generations and judgments.
+
+---
+
+## Threats to Validity
+
+**LLM judge variability.** The evaluation uses LLM-scored metrics when RAGAS is unavailable. Scores are useful for controlled comparison within the same run, but small differences should not be overinterpreted.
+
+**Dataset size.** The 42-question benchmark is large enough to compare the four retrieval configurations more reliably than the initial 10-question set, but it is still a small benchmark.
+
+**Corpus scope.** The corpus is limited to selected public technical documentation, so results may not generalize to noisy enterprise corpora, long PDFs, or multimodal data.
+
+**Rewrite subset selection.** The 7-question rewrite subset was intentionally selected to stress query rewriting, so it should not be treated as representative of all user questions.
+
+**Evaluator metadata.** Saved outputs should record whether each score came from RAGAS or the fallback LLM judge to make future audits easier.
 
 ---
 
@@ -121,7 +197,8 @@ The likely explanation: semantic chunking on technical documentation produces la
 This project is a reproducible retrieval benchmarking system. The core value is not the QA system itself—any RAG scaffold can answer questions—but the evaluation infrastructure that makes configuration tradeoffs visible and comparable.
 
 The main claims supported by the experiments:
-- Corpus quality (filtering, cleaning, guaranteed core coverage) matters more than retrieval strategy tuning on a noisy corpus.
-- Hybrid retrieval consistently improves answer relevancy over dense-only retrieval on technical documentation.
-- Fixed chunking outperforms semantic chunking on structured documentation where chunk size consistency matters more than semantic coherence.
+- During development, corpus-quality improvements appeared to have a larger practical impact on retrieval failures than retrieval-strategy tuning. This observation was not evaluated through a dedicated ablation study and should be treated as an engineering observation rather than a measured experimental result.
+- Hybrid retrieval consistently improves answer relevancy over dense-only retrieval on this technical documentation benchmark.
+- Fixed chunking outperforms semantic chunking on context precision in this structured documentation corpus.
 - Faithfulness is a floor metric for this type of grounded QA; answer relevancy and context precision are the informative signals.
+- Agentic behavior needs separate evaluation: query rewriting can help underspecified diagnostic questions, but it can also add steps or fire unnecessarily on already precise queries.
