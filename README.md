@@ -65,7 +65,7 @@ flowchart TD
 
 ### Agentic RAG Architecture
 
-The agentic path wraps the existing retriever and generator in a minimal LangGraph state machine. It does not introduce web search, code execution, MCP tools, or a supervisor-worker multi-agent design. The goal is to evaluate agent behavior without adding unnecessary orchestration complexity.
+The agentic path wraps the existing retriever and generator in a minimal LangGraph state machine. It adds one conditional web-search fallback for low-confidence answers, but does not introduce code execution, MCP tools, or a supervisor-worker multi-agent design. The goal is to evaluate agent behavior without adding unnecessary orchestration complexity.
 
 ```mermaid
 flowchart TD
@@ -79,28 +79,26 @@ flowchart TD
     H --> I[Confidence scoring node]
     I --> J{Low confidence?}
     J -->|No| K[Answer + sources]
-    J -->|Yes| L[Answer + fallback metadata]
+    J -->|Yes| L[Web search fallback]
+    L --> O[Regenerated answer from web snippets]
     K --> M[Trajectory log]
-    L --> M
+    O --> M
     M --> N[Trajectory evaluation]
 ```
 
 ### LangGraph Workflow
 
 ```mermaid
-stateDiagram-v2
-    [*] --> QueryAnalysis
-    QueryAnalysis --> QueryRewrite
-    QueryRewrite --> Retrieval
-    Retrieval --> Generation
-    Generation --> ConfidenceScoring
-    ConfidenceScoring --> [*]
-
-    QueryAnalysis: Analyze specificity and contextual references
-    QueryRewrite: Rewrite only when query is short or underspecified
-    Retrieval: Use existing dense or hybrid retriever
-    Generation: Use existing grounded RAG prompt
-    ConfidenceScoring: Score confidence and record fallback metadata
+flowchart TD
+    A[Question] --> B[analyze_query]
+    B --> C[maybe_rewrite_query]
+    C --> D[retrieve_context]
+    D --> E[generate_response]
+    E --> F[score_confidence]
+    F --> G{fallback?}
+    G -->|no| H[final answer]
+    G -->|yes| I[web_search_fallback]
+    I --> H
 ```
 
 ### Data Flow
@@ -381,12 +379,14 @@ For design decisions, experiment analysis, and result interpretation, see [WRITE
 | LangGraph single-agent RAG workflow | Implemented |
 | Trajectory evaluation | Implemented |
 | Multi-agent supervisor-worker routing | Not included in Phase 1 |
-| Web search, code execution, MCP tools | Not included in Phase 1 |
+| Conditional web-search fallback | Implemented |
+| Code execution, MCP tools | Not included in Phase 1 |
 
 `src/agent/tools.py` contains internal wrappers around the existing document
 retriever, query rewriter, and grounded answer generator used by the LangGraph
-workflow. It does not implement external web search, code execution, MCP
-integrations, or external tool routing.
+workflow. Low-confidence answers can route once to a Tavily web-search fallback;
+the workflow does not implement code execution, MCP integrations, or external
+tool routing beyond that bounded fallback.
 
 ## How To Run
 
