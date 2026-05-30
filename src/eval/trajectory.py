@@ -145,6 +145,7 @@ def summarize_trajectory_results(
             "query_rewrite_used",
             "retrieval_success_proxy",
             "retrieved_document_count",
+            "web_search_used",
             "total_latency_s",
         )
         if column in results_df.columns
@@ -312,6 +313,11 @@ def _run_agentic_rag(
     row["confidence"] = result.get("confidence")
     row["fallback"] = bool(result.get("fallback", False))
     row["fallback_reason"] = result.get("fallback_reason", "")
+    row["web_search_used"] = bool(result.get("web_search_used", False))
+    row["web_fallback_latency_s"] = _trajectory_latency(
+        trajectory,
+        "web_search_fallback",
+    )
 
     return row, _row_to_rag_run(row, item, documents)
 
@@ -347,6 +353,8 @@ def _base_row(
         "confidence": None,
         "fallback": False,
         "fallback_reason": "",
+        "web_search_used": False,
+        "web_fallback_latency_s": None,
     }
 
 
