@@ -1,42 +1,9 @@
-system,retriever,question,ground_truth,answer,sources,retrieved_document_count,retrieval_success_proxy,retrieval_latency_s,generation_latency_s,total_latency_s,tool_step_count,query_rewrite_used,trajectory_steps,confidence,fallback,fallback_reason,answer_relevancy,faithfulness
-baseline_rag,hybrid,What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?,"chunk_overlap sets the target overlap between chunks, which helps mitigate information loss when context is divided across chunk boundaries.","`chunk_overlap` sets the target overlap between chunks in `RecursiveCharacterTextSplitter`.
+system,retriever,question,ground_truth,answer,sources,retrieved_document_count,retrieval_success_proxy,retrieval_latency_s,generation_latency_s,total_latency_s,tool_step_count,query_rewrite_used,trajectory_steps,confidence,fallback,fallback_reason,web_search_used,web_fallback_latency_s,answer_relevancy,faithfulness
+baseline_rag,hybrid,What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?,"chunk_overlap sets the target overlap between chunks, which helps mitigate information loss when context is divided across chunk boundaries.",`chunk_overlap` sets the target overlap between chunks. Overlapping chunks helps mitigate information loss when context is divided between chunks.,"['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking']",8,True,0.014525916893035173,2.373137582791969,3.246655457885936,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?,"chunk_overlap sets the target overlap between chunks, which helps mitigate information loss when context is divided across chunk boundaries.",`chunk_overlap` sets the target overlap between chunks. Overlapping chunks helps mitigate loss of information when context is divided between chunks.,"['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking']",8,True,0.2102019579615444,1.2670130000915378,1.496914624935016,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,How does RecursiveCharacterTextSplitter.split_text differ from create_documents?,"split_text returns the string content chunks directly, while create_documents creates LangChain Document objects for downstream tasks.","`RecursiveCharacterTextSplitter.split_text` returns the split text chunks directly as strings.
 
-Overlapping chunks helps mitigate loss of information when context is divided between chunks. For example, `chunk_overlap=200` means chunks should overlap by about 200 characters.","['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking']",8,True,0.0137561250012367,4.138944917125627,11.580631624907255,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,What does the chunk_overlap parameter do in RecursiveCharacterTextSplitter?,"chunk_overlap sets the target overlap between chunks, which helps mitigate information loss when context is divided across chunk boundaries.",`chunk_overlap` sets the target overlap between chunks. Overlapping chunks helps mitigate loss of information when context is divided between chunks.,"['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking']",8,True,0.1232524579390883,1.592622583033517,1.7315283340867609,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,How does RecursiveCharacterTextSplitter.split_text differ from create_documents?,"split_text returns the string content chunks directly, while create_documents creates LangChain Document objects for downstream tasks.","`RecursiveCharacterTextSplitter.split_text` returns the split text content directly as strings.
-
-`RecursiveCharacterTextSplitter.create_documents` creates LangChain `Document` objects from the input text, for use in downstream tasks.
-
-Example from the docs:
-
-```python
-texts = text_splitter.create_documents([state_of_the_union])
-print(texts[0])
-```
-
-Outputs:
-
-```python
-page_content='Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and'
-```
-
-Whereas:
-
-```python
-text_splitter.split_text(state_of_the_union)[:2]
-```
-
-Outputs:
-
-```python
-[
-  'Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and',
-  'of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.'
-]
-```","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/task-budgets', 'https://platform.claude.com/docs/en/build-with-claude/citations']",8,True,0.0048695828299969,3.674438833957538,3.810106417164208,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,How does RecursiveCharacterTextSplitter.split_text differ from create_documents?,"split_text returns the string content chunks directly, while create_documents creates LangChain Document objects for downstream tasks.","`RecursiveCharacterTextSplitter.split_text` returns the split text content directly as strings.
-
-`RecursiveCharacterTextSplitter.create_documents` creates LangChain `Document` objects from the input text, for use in downstream tasks.
+`RecursiveCharacterTextSplitter.create_documents` creates LangChain `Document` objects from the input text, which can be used in downstream tasks.
 
 Example from the docs:
 
@@ -54,7 +21,7 @@ page_content='Madam Speaker, Madam Vice President, our First Lady and Second Gen
 Whereas:
 
 ```python
-print(text_splitter.split_text(state_of_the_union)[:2])
+text_splitter.split_text(state_of_the_union)[:2]
 ```
 
 Outputs plain strings:
@@ -64,27 +31,61 @@ Outputs plain strings:
   'Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and',
   'of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.'
 ]
-```","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/task-budgets', 'https://platform.claude.com/docs/en/build-with-claude/citations']",8,True,0.1226985838729888,4.595780166098848,4.735255792038515,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
+```","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/task-budgets', 'https://platform.claude.com/docs/en/build-with-claude/citations']",8,True,0.01234712521545589,4.462058207951486,4.633855457883328,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,How does RecursiveCharacterTextSplitter.split_text differ from create_documents?,"split_text returns the string content chunks directly, while create_documents creates LangChain Document objects for downstream tasks.","`RecursiveCharacterTextSplitter.split_text` returns the split content directly as strings.
+
+`RecursiveCharacterTextSplitter.create_documents` creates LangChain `Document` objects from the split text, for use in downstream tasks.
+
+Example from the context:
+
+```python
+texts = text_splitter.create_documents([state_of_the_union])
+print(texts[0])
+```
+
+Outputs a `Document` object:
+
+```python
+page_content='Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and'
+```
+
+Whereas:
+
+```python
+text_splitter.split_text(state_of_the_union)[:2]
+```
+
+Returns strings:
+
+```python
+[
+  'Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and',
+  'of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.'
+]
+```","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', 'https://platform.claude.com/docs/en/build-with-claude/task-budgets', 'https://platform.claude.com/docs/en/build-with-claude/citations']",8,True,0.12449275003746152,4.245163290994242,4.39440858294256,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
 baseline_rag,hybrid,What failure modes are avoided by splitting a large document before embedding and retrieval?,Splitting avoids exceeding many models' finite context windows and reduces the chance that models struggle to find relevant information in very long inputs.,"Splitting a large document before embedding and retrieval helps avoid these failure modes:
 
-- The document or chunks may be too large to fit in a model’s finite context window.
-- Even if the full document fits, the model may struggle to find relevant information in a very long input.
+- The document or chunks may be too large to fit into a model’s finite context window.
+- Even if the model can fit the full document, it may struggle to find relevant information in very long inputs.
 - Large chunks are harder to search over effectively during retrieval.
-
-Splitting lets the system embed and store smaller chunks, then retrieve only the most relevant parts at runtime.","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/embeddings', 'https://docs.langchain.com/oss/python/integrations/document_loaders', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing']",8,True,0.0046641249209642,3.8368909161072224,3.958222375018522,2,False,[],,False,,1.0,1.0
+- Retrieval may return overly broad content instead of the most relevant parts of the document.","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/embeddings', 'https://docs.langchain.com/oss/python/integrations/document_loaders', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing']",8,True,0.004161874996498227,3.11684629204683,3.2485982498619705,2,False,[],,False,,False,,1.0,1.0
 agentic_rag,hybrid,What failure modes are avoided by splitting a large document before embedding and retrieval?,Splitting avoids exceeding many models' finite context windows and reduces the chance that models struggle to find relevant information in very long inputs.,"Splitting a large document before embedding and retrieval helps avoid these failure modes:
 
-- **Exceeding the model’s context window**: Large documents or chunks may not fit into a model’s finite context window.
-- **Poor retrieval/search quality**: Large chunks are harder to search over effectively.
-- **Model difficulty finding relevant information**: Even if a long document fits in context, models can struggle to find the needed information in very long inputs.
+- The document or chunk may not fit in the model’s finite context window.
+- Even if it fits, the model may struggle to find relevant information in a very long input.
+- Large chunks are harder to search over during retrieval.
+- Retrieval may return too much irrelevant text instead of only the most relevant parts.","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/embeddings', 'https://docs.langchain.com/oss/python/integrations/document_loaders', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing']",8,True,0.2473565828986466,4.022621083073318,4.29479429195635,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,How does chunking a document help ground generation at run time in the RAG workflow?,The document is split into smaller chunks for embedding and vector storage so retrieval can return only the most relevant parts for the model at run time.,"Chunking helps by splitting a long document into smaller pieces that can be embedded and stored in a vector store. At run time, the RAG system retrieves only the chunks most relevant to the user’s question, then passes those retrieved chunks along with the question to the model for generation.
 
-By splitting the document into smaller chunks, retrieval can return only the most relevant parts at runtime.","['https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/embeddings', 'https://docs.langchain.com/oss/python/integrations/document_loaders', 'https://platform.claude.com/docs/en/build-with-claude/batch-processing']",8,True,0.2229191251099109,4.494580624857917,4.733023792039603,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,How does chunking a document help ground generation at run time in the RAG workflow?,The document is split into smaller chunks for embedding and vector storage so retrieval can return only the most relevant parts for the model at run time.,"Chunking helps in a RAG workflow by splitting a long document into smaller pieces for embedding and vector storage. At run time, the system retrieves only the chunks most relevant to the user’s question, then passes those retrieved chunks along with the question to the model for generation.
+This grounds the model’s answer in specific source information while avoiding the need to send the entire document, which may be too long for the context window or hard for the model to search effectively.","['https://platform.claude.com/docs/en/build-with-claude/citations', 'https://docs.langchain.com/oss/python/langchain/rag']",6,True,0.004384499974548817,3.923048166092485,4.056573042180389,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,How does chunking a document help ground generation at run time in the RAG workflow?,The document is split into smaller chunks for embedding and vector storage so retrieval can return only the most relevant parts for the model at run time.,"Chunking helps by splitting a long document into smaller pieces for embedding and vector storage. At run time, the RAG system retrieves only the chunks or splits most relevant to the user’s query, then passes those retrieved pieces along with the question to the model for generation.
 
-This helps ground the model’s answer in the relevant source information instead of requiring the model to process the entire document, which may be too long or difficult for the model to search effectively.","['https://platform.claude.com/docs/en/build-with-claude/citations', 'https://docs.langchain.com/oss/python/langchain/rag']",6,True,0.015133416978642344,3.677310291910544,4.481231666170061,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,How does chunking a document help ground generation at run time in the RAG workflow?,The document is split into smaller chunks for embedding and vector storage so retrieval can return only the most relevant parts for the model at run time.,"Chunking helps in a RAG workflow by splitting a large document into smaller pieces for embedding and vector storage. At run time, when a user asks a question, the system retrieves only the chunks most relevant to that query instead of passing the entire document to the model.
+This helps because:
 
-This helps ground generation because the model receives the user question together with the retrieved relevant data, allowing it to produce an answer based on specific source information. It also helps when the original document is too long for a model’s context window, or when a model might struggle to find the right information in a very long input.","['https://platform.claude.com/docs/en/build-with-claude/citations', 'https://docs.langchain.com/oss/python/langchain/rag']",6,True,0.13326241704635322,4.695429874816909,4.844401499954984,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
+- Long documents may be too large for a model’s context window.
+- Even when they fit, models can struggle to find the right information in very long inputs.
+- Smaller chunks make retrieval more targeted, so the model receives the most relevant source information.
+- The generated answer is therefore grounded in the retrieved data rather than the entire unfiltered document.","['https://platform.claude.com/docs/en/build-with-claude/citations', 'https://docs.langchain.com/oss/python/langchain/rag']",6,True,0.12679016590118408,4.599754875060171,4.752331292023882,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
 baseline_rag,hybrid,"Which LangChain splitter API is used for generic text, and what configuration is shown for splitting a loaded document?","RecursiveCharacterTextSplitter is used with chunk_size=1000, chunk_overlap=200, and add_start_index=True.","LangChain uses `RecursiveCharacterTextSplitter` as the recommended splitter for generic text use cases.
 
 Shown configuration for splitting a loaded document:
@@ -101,7 +102,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 all_splits = text_splitter.split_documents(docs)
 ```
 
-The docs note that it recursively splits documents using common separators like new lines until each chunk is the appropriate size.","['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking']",8,True,0.006765375146642327,3.3575463339220732,3.492353582987562,2,False,[],,False,,1.0,1.0
+The example splits the loaded documents into smaller sub-documents for embedding and vector storage.","['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking']",8,True,0.01004816684871912,3.4147910000756383,3.5630812500603497,2,False,[],,False,,False,,1.0,1.0
 agentic_rag,hybrid,"Which LangChain splitter API is used for generic text, and what configuration is shown for splitting a loaded document?","RecursiveCharacterTextSplitter is used with chunk_size=1000, chunk_overlap=200, and add_start_index=True.","LangChain uses `RecursiveCharacterTextSplitter` as the recommended splitter for generic text use cases.
 
 The shown configuration for splitting a loaded document is:
@@ -118,18 +119,28 @@ text_splitter = RecursiveCharacterTextSplitter(
 all_splits = text_splitter.split_documents(docs)
 ```
 
-This recursively splits documents using common separators like new lines until each chunk is the appropriate size.","['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking']",8,True,0.12548287492245436,3.3066312081646174,3.452345500001684,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,What is a VectorStore in the LangChain RAG pipeline?,A VectorStore is a wrapper around a vector database used for storing and querying embeddings.,"In the LangChain RAG pipeline, a `VectorStore` is used to store and index document chunks (“splits”) so they can be searched over later. It is typically used together with an embeddings model to enable retrieval of relevant context for a query.","['https://docs.langchain.com/oss/python/integrations/providers/aws', 'https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/providers/nvidia']",8,True,0.0033108750358223915,3.23478199983947,3.3640998338814825,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,What is a VectorStore in the LangChain RAG pipeline?,A VectorStore is a wrapper around a vector database used for storing and querying embeddings.,"In the LangChain RAG pipeline, a **VectorStore** is where document splits/chunks are **stored and indexed** so they can be **searched over later**.
+This splits loaded `Document` objects into smaller chunks for embedding, storage, and retrieval.","['https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking']",8,True,0.1290179998613894,3.00231045903638,3.1612711250782013,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,What is a VectorStore in the LangChain RAG pipeline?,A VectorStore is a wrapper around a vector database used for storing and querying embeddings.,"In the LangChain RAG pipeline, a **VectorStore** is used to **store and index document chunks** so they can be searched over later.
 
-The RAG flow described in the context is:
+After documents are loaded and split into smaller chunks, those chunks are typically stored in a VectorStore along with an **Embeddings model**, enabling retrieval of relevant context for a user query.","['https://docs.langchain.com/oss/python/integrations/providers/aws', 'https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/providers/nvidia']",8,True,0.005655915942043066,3.473509249975905,3.61614358285442,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,What is a VectorStore in the LangChain RAG pipeline?,A VectorStore is a wrapper around a vector database used for storing and querying embeddings.,"In the LangChain RAG pipeline, a **VectorStore** is used to **store and index document chunks** so they can be **searched over later**.
 
-1. **Load documents** into `Document` objects.
-2. **Split** large documents into smaller chunks, because large chunks are harder to search over and may not fit in a model’s context window.
-3. **Store** those chunks in a **VectorStore**, often together with an **Embeddings model**, so they can be retrieved for later queries.
+After documents are loaded and split into smaller chunks, the VectorStore works with an **Embeddings model** to make those chunks searchable, typically for retrieving relevant context during retrieval-augmented generation.","['https://docs.langchain.com/oss/python/integrations/providers/aws', 'https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/providers/nvidia']",8,True,0.12396945897489786,2.1439518339466304,2.288463291944936,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,How do you initialize a local Chroma vector store with data persistence using OpenAI embeddings?,"Install langchain-chroma, create an OpenAIEmbeddings instance, then instantiate Chroma with a collection_name, embedding_function, and persist_directory such as ""./chroma_langchain_db"".","```python
+from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
 
-A vector store can also be turned into a **retriever** for easier use in chains, for example with `vector_store.as_retriever(...)`.","['https://docs.langchain.com/oss/python/integrations/providers/aws', 'https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/langchain/rag', 'https://docs.langchain.com/oss/python/integrations/providers/nvidia']",8,True,0.2776776668615639,3.5978950411081314,3.8937992081046104,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,How do you initialize a local Chroma vector store with data persistence using OpenAI embeddings?,"Install langchain-chroma, create an OpenAIEmbeddings instance, then instantiate Chroma with a collection_name, embedding_function, and persist_directory such as ""./chroma_langchain_db"".","Initialize OpenAI embeddings, then create a `Chroma` vector store with a `persist_directory`:
+embeddings = OpenAIEmbeddings(model=""text-embedding-3-large"")
+
+vector_store = Chroma(
+    collection_name=""example_collection"",
+    embedding_function=embeddings,
+    persist_directory=""./chroma_langchain_db"",
+)
+```
+
+The `persist_directory` argument saves your Chroma data across multiple runs of your program.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.003994415979832411,2.6209183749742806,2.7480029589496553,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,How do you initialize a local Chroma vector store with data persistence using OpenAI embeddings?,"Install langchain-chroma, create an OpenAIEmbeddings instance, then instantiate Chroma with a collection_name, embedding_function, and persist_directory such as ""./chroma_langchain_db"".","Use `OpenAIEmbeddings` as the embedding function and pass a `persist_directory` to `Chroma`:
 
 ```python
 from langchain_openai import OpenAIEmbeddings
@@ -144,38 +155,10 @@ vector_store = Chroma(
 )
 ```
 
-The `persist_directory` argument saves your data across multiple runs of your program.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.005647584097459912,2.8145075000356883,2.958807749906555,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,How do you initialize a local Chroma vector store with data persistence using OpenAI embeddings?,"Install langchain-chroma, create an OpenAIEmbeddings instance, then instantiate Chroma with a collection_name, embedding_function, and persist_directory such as ""./chroma_langchain_db"".","Initialize OpenAI embeddings, then create a `Chroma` vector store with a `persist_directory`:
-
-```python
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
-
-embeddings = OpenAIEmbeddings(model=""text-embedding-3-large"")
-
-vector_store = Chroma(
-    collection_name=""example_collection"",
-    embedding_function=embeddings,
-    persist_directory=""./chroma_langchain_db"",
-)
-```
-
-The `persist_directory` argument saves your data across multiple runs of your program.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.12877070903778076,2.139097125036642,2.2927692499943078,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,How do you create a LangChain Chroma vector store from an existing chromadb client after creating or accessing a collection?,"Create or access the collection with client.get_or_create_collection(""collection_name""), optionally add documents, then instantiate Chroma with client, collection_name, and embedding_function.","I do not know. The retrieved context says you can initialize from a Chroma client, but it does not include the exact code for creating a LangChain `Chroma` vector store from an existing `chromadb` client after creating or accessing a collection.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.004767040954902768,12.296014209045097,12.43188620894216,2,False,[],,False,,0.0,1.0
-agentic_rag,hybrid,How do you create a LangChain Chroma vector store from an existing chromadb client after creating or accessing a collection?,"Create or access the collection with client.get_or_create_collection(""collection_name""), optionally add documents, then instantiate Chroma with client, collection_name, and embedding_function.","Create the LangChain Chroma vector store by initializing `langchain_chroma.Chroma` with the existing `chromadb` client, the collection name, and your embedding function:
-
-```python
-from langchain_chroma import Chroma
-
-vector_store = Chroma(
-    client=client,
-    collection_name=""example_collection"",
-    embedding_function=embeddings,
-)
-```
-
-The context says this “initialization from client” approach is useful when you want easier access to the underlying Chroma database.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.14616666710935533,11.029774875147268,11.198398042004555,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,"A local Chroma server is running with `chroma run`, but the code uses persist_directory and does not connect to the server. What is the likely issue and what should be used instead?","persist_directory configures a local persistent database, not a server connection. To connect to the running server, initialize Chroma with host=""localhost""; for lower-level client initialization use chromadb.HttpClient(host=""localhost"", port=8000).","The likely issue is that `persist_directory` creates/uses a local persistent Chroma store on disk; it does **not** connect to the running Chroma server.
+The `persist_directory` argument saves your Chroma data across multiple runs of your program.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.12111441697925329,3.1301427921280265,3.266979333013296,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,How do you create a LangChain Chroma vector store from an existing chromadb client after creating or accessing a collection?,"Create or access the collection with client.get_or_create_collection(""collection_name""), optionally add documents, then instantiate Chroma with client, collection_name, and embedding_function.","I do not know. The retrieved context says you can initialize LangChain’s `Chroma` from an existing Chroma client, and shows examples of creating `chromadb` clients, but it does not include the specific code for creating the LangChain `Chroma` vector store after creating or accessing a collection.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.006694457959383726,10.328420334029943,10.486956166103482,2,False,[],,False,,False,,0.0,1.0
+agentic_rag,hybrid,How do you create a LangChain Chroma vector store from an existing chromadb client after creating or accessing a collection?,"Create or access the collection with client.get_or_create_collection(""collection_name""), optionally add documents, then instantiate Chroma with client, collection_name, and embedding_function.","I don’t know. The retrieved context says you can initialize a LangChain `Chroma` vector store from an existing Chroma client, and shows examples of creating `chromadb.Client()`, `PersistentClient`, `HttpClient`, or `CloudClient`, but it does not include the exact code for creating the LangChain `Chroma` vector store from that client after creating or accessing a collection.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.12343312497250736,8.928001540945843,9.063853834057227,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,0.0,1.0
+baseline_rag,hybrid,"A local Chroma server is running with `chroma run`, but the code uses persist_directory and does not connect to the server. What is the likely issue and what should be used instead?","persist_directory configures a local persistent database, not a server connection. To connect to the running server, initialize Chroma with host=""localhost""; for lower-level client initialization use chromadb.HttpClient(host=""localhost"", port=8000).","The likely issue is that `persist_directory` is for running Chroma locally with data persistence, not for connecting to a running Chroma server.
 
 If the server is running with `chroma run`, use the `host` argument instead:
 
@@ -189,18 +172,10 @@ vector_store = Chroma(
 )
 ```
 
-For other deployments, you can also customize the connection with `port`, `ssl`, and `headers`.
-
-If initializing from a Chroma client, use:
-
-```python
-import chromadb
-
-client = chromadb.HttpClient(host=""localhost"", port=8000, ssl=False)
-```",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.009106416953727603,3.7652906249277294,3.9174843749497086,2,False,[],,False,,1.0,1.0
+For other deployments, you can also use `port`, `ssl`, and `headers` to customize the connection.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.009208917152136564,2.85794216603972,3.019566582981497,2,False,[],,False,,False,,1.0,1.0
 agentic_rag,hybrid,"A local Chroma server is running with `chroma run`, but the code uses persist_directory and does not connect to the server. What is the likely issue and what should be used instead?","persist_directory configures a local persistent database, not a server connection. To connect to the running server, initialize Chroma with host=""localhost""; for lower-level client initialization use chromadb.HttpClient(host=""localhost"", port=8000).","The likely issue is that `persist_directory` is for running Chroma locally with data persistence, not for connecting to a running Chroma server.
 
-If the server was started with `chroma run`, use the `host` argument instead:
+If the Chroma server was started with `chroma run`, connect to it using the `host` argument instead:
 
 ```python
 from langchain_chroma import Chroma
@@ -212,16 +187,22 @@ vector_store = Chroma(
 )
 ```
 
-For other deployments, you can also customize the connection with `port`, `ssl`, and `headers`.
-
-Alternatively, when initializing from a Chroma client, use:
+For other deployments, you can also customize the connection with `port`, `ssl`, and `headers`.",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.13639033399522305,3.1212883749976754,3.2946392081212252,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
+baseline_rag,hybrid,"Which Chroma vector store API searches using an embedding vector directly, and how is the query embedding produced?","Use vector_store.similarity_search_by_vector; the embedding is produced with embeddings.embed_query(""query string"") and passed as the embedding argument.","The Chroma vector store API is:
 
 ```python
-import chromadb
+vector_store.similarity_search_by_vector(...)
+```
 
-client = chromadb.HttpClient(host=""localhost"", port=8000, ssl=False)
-```",['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma'],6,True,0.12726816721260548,4.154133167117834,4.304421791108325,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
-baseline_rag,hybrid,"Which Chroma vector store API searches using an embedding vector directly, and how is the query embedding produced?","Use vector_store.similarity_search_by_vector; the embedding is produced with embeddings.embed_query(""query string"") and passed as the embedding argument.","The Chroma vector store API is:
+It searches using an embedding vector directly. The query embedding is produced by calling the embedding model’s `embed_query` method on the query text, for example:
+
+```python
+results = vector_store.similarity_search_by_vector(
+    embedding=embeddings.embed_query(""I love green eggs and ham!""),
+    k=1
+)
+```","['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/integrations/embeddings']",7,True,0.013586750021204352,2.2217502498533577,2.4562422919552773,2,False,[],,False,,False,,1.0,1.0
+agentic_rag,hybrid,"Which Chroma vector store API searches using an embedding vector directly, and how is the query embedding produced?","Use vector_store.similarity_search_by_vector; the embedding is produced with embeddings.embed_query(""query string"") and passed as the embedding argument.","The Chroma vector store API is:
 
 ```python
 vector_store.similarity_search_by_vector(...)
@@ -234,18 +215,4 @@ results = vector_store.similarity_search_by_vector(
     embedding=embeddings.embed_query(""I love green eggs and ham!""),
     k=1
 )
-```","['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/integrations/embeddings']",7,True,0.004428582964465022,2.230237416923046,2.3650794168934226,2,False,[],,False,,1.0,1.0
-agentic_rag,hybrid,"Which Chroma vector store API searches using an embedding vector directly, and how is the query embedding produced?","Use vector_store.similarity_search_by_vector; the embedding is produced with embeddings.embed_query(""query string"") and passed as the embedding argument.","The Chroma vector store API for searching directly with an embedding vector is:
-
-```python
-vector_store.similarity_search_by_vector(...)
-```
-
-The query embedding is produced by calling `embed_query` on the embeddings object:
-
-```python
-results = vector_store.similarity_search_by_vector(
-    embedding=embeddings.embed_query(""I love green eggs and ham!""),
-    k=1
-)
-```","['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/integrations/embeddings']",7,True,0.12915441603399813,2.5854274169541895,2.7326355827972293,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,1.0,1.0
+```","['https://docs.langchain.com/oss/python/integrations/vectorstores/chroma', 'https://docs.langchain.com/oss/python/integrations/embeddings']",7,True,0.11704174987971783,2.9844133341684937,3.1252772081643343,5,False,"['query_analysis', 'query_rewrite', 'document_retrieval', 'answer_generation', 'confidence_scoring']",0.95,False,,False,,1.0,1.0
