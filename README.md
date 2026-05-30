@@ -101,6 +101,11 @@ flowchart TD
     I --> H
 ```
 
+The workflow is traced end-to-end via LangSmith. Each node's latency and
+state is visible at the span level.
+
+![LangSmith trace](docs/langsmith_trace.png)
+
 ### Data Flow
 
 | Stage | Input | Processing | Output |
@@ -283,17 +288,19 @@ than rewrite behavior.
 | Metric | Baseline RAG | Agentic RAG |
 |---|---:|---:|
 | Questions | 10 | 10 |
-| Answer relevancy | 0.900 | 1.000 |
+| Answer relevancy | 0.900 | 0.900 |
 | Faithfulness | 1.000 | 1.000 |
 | Retrieval success rate | 1.000 | 1.000 |
 | Query rewrite rate | 0.000 | 0.000 |
+| Web search fallback rate | 0.000 | 0.000 |
 | Mean tool step count | 2.000 | 5.000 |
-| Mean total latency (s) | 5.236 | 4.392 |
+| Mean total latency (s) | 4.108 | 3.914 |
 
-The average answer relevancy improvement in this pilot is driven by one baseline
-answer receiving a 0.000 relevancy score, while all other rows scored 1.000.
-The lower observed agent latency should also be interpreted cautiously because
-LLM latency is variable and no rewrite calls were made.
+The pilot did not show an answer relevancy or faithfulness improvement for the
+agent. Query rewriting and web search fallback did not trigger on this sample,
+so the run primarily measures the graph wrapper, trajectory logging, retrieval,
+generation, and confidence-scoring path. The lower observed agent latency should
+be interpreted cautiously because LLM latency is variable.
 
 #### 2. Rewrite Subset Evaluation (7 rewrite-triggering questions)
 
@@ -380,6 +387,7 @@ For design decisions, experiment analysis, and result interpretation, see [WRITE
 | Trajectory evaluation | Implemented |
 | Multi-agent supervisor-worker routing | Not included in Phase 1 |
 | Conditional web-search fallback | Implemented |
+| LangSmith tracing | Implemented |
 | Code execution, MCP tools | Not included in Phase 1 |
 
 `src/agent/tools.py` contains internal wrappers around the existing document
@@ -533,6 +541,5 @@ the 7-question rewrite subset was selected.
 | Retrieval | Add reranking and evaluate whether it improves context precision. |
 | Evaluation | Add recall@k, hit@k, and trajectory regression tests. |
 | Agent calibration | Test whether confidence scoring should be conditionally invoked, and compare fallback threshold values against retrieval-success signals, answer quality, and latency. |
-| Observability | Add LangSmith tracing for graph-level inspection. |
 | Serving | Add production authentication, rate limits, and deployment configuration. |
 | Agent design | Explore multi-step retrieval only after Phase 1 behavior is measured. |
