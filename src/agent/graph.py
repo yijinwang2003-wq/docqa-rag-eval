@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from langgraph.graph import END, START, StateGraph
 
 from src.agent.nodes import (
@@ -56,5 +58,23 @@ def run_agent(question: str, retriever_name: str = "dense") -> AgentState:
             "web_search_used": False,
             "web_search_results": [],
             "trajectory": [],
-        }
+        },
+        config=_langsmith_trace_config(),
     )
+
+
+def _langsmith_trace_config() -> dict | None:
+    if os.getenv("LANGCHAIN_TRACING_V2", "").lower() != "true":
+        return None
+    if not os.getenv("LANGCHAIN_API_KEY"):
+        return None
+
+    try:
+        from langchain_core.tracers.langchain import LangChainTracer
+    except ImportError:
+        return None
+
+    return {
+        "callbacks": [LangChainTracer()],
+        "run_name": "agentic_rag",
+    }
