@@ -1,9 +1,10 @@
 langchain
 langgraph
-langchain-community
+langchain-community>=0.2
 langchain-openai
 langchain-chroma
 langchain-text-splitters
+tavily-python
 chromadb
 beautifulsoup4
 lxml
